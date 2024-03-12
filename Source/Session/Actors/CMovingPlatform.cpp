@@ -22,6 +22,9 @@ void ACMovingPlatform::BeginPlay()
 {
 	Super::BeginPlay();
 
+	OriginWS = GetActorLocation();
+	TargetWS = GetTransform().TransformPosition(Target);
+
 	if (HasAuthority())
 	{
 		SetReplicates(true);
@@ -33,14 +36,36 @@ void ACMovingPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (ActiveTriggers < 1) return;
+
 	if (HasAuthority())
 	{
 		FVector currentLocation = GetActorLocation();
-		FVector targetWS = GetTransform().TransformPosition(Target);
+		
+		float totalDistance = (OriginWS - TargetWS).Size();
+		float distanceFromOrigin = (OriginWS - currentLocation).Size();
 
-		FVector direction = (targetWS - currentLocation).GetSafeNormal();
+		if (distanceFromOrigin >= totalDistance)
+		{
+			FVector temp = OriginWS;
+			OriginWS = TargetWS;
+			TargetWS = temp;
+		}
+
+		FVector direction = (TargetWS - OriginWS).GetSafeNormal();
 
 		currentLocation += direction * Speed * DeltaTime;
 		SetActorLocation(currentLocation);
 	}
+}
+
+void ACMovingPlatform::AddActiveTrigger()
+{
+	ActiveTriggers++;
+}
+
+void ACMovingPlatform::RemoveActiveTrigger()
+{
+	if (ActiveTriggers > 0)
+		ActiveTriggers--;
 }
