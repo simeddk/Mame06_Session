@@ -19,4 +19,10 @@ public:
 
 	UFUNCTION(Exec)
 		void Join(const FString& InAddress);
+
+	UFUNCTION(BlueprintCallable, Exec)
+		void LoadMenu();
+
+private:
+	TSubclassOf<class UUserWidget> MenuWidgetClass;
 };
