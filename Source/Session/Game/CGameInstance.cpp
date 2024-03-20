@@ -1,7 +1,6 @@
 #include "CGameInstance.h"
 #include "Widgets/CMainMenu.h"
 #include "Widgets/CGameMenu.h"
-#include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
 
 const static FName SESSION_NAME = TEXT("GameSession");
@@ -30,16 +29,7 @@ void UCGameInstance::Init()
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnCreateSessionCompleted);
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnDestroySessionCompleted);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UCGameInstance::OnFindSessionCompleted);
-
-			//#Temp. Find Session
-			SessionSearch = MakeShareable(new FOnlineSessionSearch());
-			if (SessionSearch.IsValid())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Start Find Sessions"));
-				SessionSearch->bIsLanQuery = true;
-				SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
-			}
-			//----
+			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnJoinSessionCompleted);
 		}
 	}
 	else
@@ -76,19 +66,15 @@ void UCGameInstance::CreateSession()
 	SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
 }
 
-void UCGameInstance::Join(const FString& InAddress)
+void UCGameInstance::Join(uint32 InIndex)
 {
+	if (SessionInterface.IsValid() == false) return;
+	if (SessionSearch.IsValid() == false) return;
+
 	if (!!MenuWidget)
 		MenuWidget->SetInputGameMode();
 
-	UEngine* engine = GetEngine();
-	if (engine == nullptr) return;
-	engine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString::Printf(TEXT("Join to %s"), *InAddress), true, FVector2D(2));
-
-	APlayerController* controller = GetFirstLocalPlayerController();
-	if (controller == nullptr) return;
-
-	controller->ClientTravel(InAddress, ETravelType::TRAVEL_Absolute);
+	SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[InIndex]);
 }
 
 void UCGameInstance::LoadMainMenu()
@@ -119,6 +105,18 @@ void UCGameInstance::TravelToMainMenu()
 	if (controller == nullptr) return;
 
 	controller->ClientTravel("/Game/Maps/MainMenu", ETravelType::TRAVEL_Absolute);
+}
+
+void UCGameInstance::ShowJoinableSessionList()
+{
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	if (SessionSearch.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start Find Sessions"));
+
+		SessionSearch->bIsLanQuery = true;
+		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+	}
 }
 
 void UCGameInstance::OnCreateSessionCompleted(FName InSessionName, bool InSuccess)
@@ -157,16 +155,38 @@ void UCGameInstance::OnDestroySessionCompleted(FName InSessionName, bool InSucce
 
 void UCGameInstance::OnFindSessionCompleted(bool InSuccess)
 {
-	if (InSuccess == true && SessionSearch.IsValid())
+	if (InSuccess == true && SessionSearch.IsValid() && MenuWidget != nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Finished Find Session"));
 
+		TArray<FString> sessionNames;
 		for (const auto& searchResult : SessionSearch->SearchResults)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Found Session ID : %s"), *searchResult.GetSessionIdStr());
 			UE_LOG(LogTemp, Error, TEXT("Ping : %d"), searchResult.PingInMs);
-			//Todo. 결과는 내일 보자
 
+			sessionNames.Add(searchResult.GetSessionIdStr());
 		}
+
+		MenuWidget->SetSessionList(sessionNames);
 	}
+}
+
+void UCGameInstance::OnJoinSessionCompleted(FName InSessionName, EOnJoinSessionCompleteResult::Type InResult)
+{
+	FString address;
+	if (SessionInterface->GetResolvedConnectString(InSessionName, address) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Could not resolve IP address"));
+		return;
+	}
+
+	UEngine* engine = GetEngine();
+	if (engine == nullptr) return;
+	engine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString::Printf(TEXT("Join to %s"), *address), true, FVector2D(2));
+
+	APlayerController* controller = GetFirstLocalPlayerController();
+	if (controller == nullptr) return;
+
+	controller->ClientTravel(address, ETravelType::TRAVEL_Absolute);
 }
