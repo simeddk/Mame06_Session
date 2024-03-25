@@ -12,7 +12,7 @@ void ACLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reached 3 Players!!"));
 
-		GetWorldTimerManager().SetTimer(GameStartHandle, this, &ACLobbyGameMode::StartGame, 10);
+		GetWorldTimerManager().SetTimer(GameStartHandle, this, &ACLobbyGameMode::StartGame, 3);
 	}
 }
 
@@ -33,5 +33,5 @@ void ACLobbyGameMode::StartGame()
 	if (world == nullptr) return;
 
 	bUseSeamlessTravel = true;
-	world->ServerTravel("/Game/Maps/Play?listen");
+	world->ServerTravel("/Game/Maps/FPS?listen");
 }
