@@ -9,16 +9,17 @@
 
 AFPSCharacter::AFPSCharacter()
 {
-	GetCapsuleComponent()->InitCapsuleSize(44.f, 88.0f);
-
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
-
+	//----------------------------------------------------------------------------
+	//Camera
+	//----------------------------------------------------------------------------
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	Camera->SetupAttachment(GetCapsuleComponent());
 	Camera->SetRelativeLocation(FVector(0, 0, 64.f));
 	Camera->bUsePawnControlRotation = true;
 	
+	//----------------------------------------------------------------------------
+	//First Person(Owner See)
+	//----------------------------------------------------------------------------
 	FP_Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	FP_Mesh->SetOnlyOwnerSee(true);
 	FP_Mesh->SetupAttachment(Camera);
@@ -35,6 +36,15 @@ AFPSCharacter::AFPSCharacter()
 	if (fp_AnimClass.Succeeded())
 		FP_Mesh->SetAnimInstanceClass(fp_AnimClass.Class);
 
+	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
+	FP_Gun->SetOnlyOwnerSee(true);
+	FP_Gun->bCastDynamicShadow = false;
+	FP_Gun->CastShadow = false;
+	FP_Gun->SetupAttachment(FP_Mesh, TEXT("GripPoint"));
+
+	//----------------------------------------------------------------------------
+	//Third Person(Other See)
+	//----------------------------------------------------------------------------
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -88));
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 	GetMesh()->SetOwnerNoSee(true);
@@ -46,12 +56,6 @@ AFPSCharacter::AFPSCharacter()
 	ConstructorHelpers::FClassFinder<UAnimInstance> tp_AnimClass(TEXT("/Game/AnimStarterPack/UE4ASP_HeroTPP_AnimBlueprint"));
 	if (tp_AnimClass.Succeeded())
 		GetMesh()->SetAnimInstanceClass(tp_AnimClass.Class);
-
-	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
-	FP_Gun->SetOnlyOwnerSee(true);
-	FP_Gun->bCastDynamicShadow = false;
-	FP_Gun->CastShadow = false;
-	FP_Gun->SetupAttachment(FP_Mesh, TEXT("GripPoint"));
 
 	TP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("TP_Gun"));
 	TP_Gun->SetOwnerNoSee(true);
@@ -65,6 +69,14 @@ AFPSCharacter::AFPSCharacter()
 		TP_Gun->SetSkeletalMesh(gunAsset.Object);
 		FP_Gun->SetSkeletalMesh(gunAsset.Object);
 	}
+
+	//----------------------------------------------------------------------------
+	//Properties
+	//----------------------------------------------------------------------------
+	GetCapsuleComponent()->InitCapsuleSize(44.f, 88.0f);
+
+	BaseTurnRate = 45.f;
+	BaseLookUpRate = 45.f;
 
 	WeaponRange = 5000.0f;
 	WeaponDamage = 10.0f;
