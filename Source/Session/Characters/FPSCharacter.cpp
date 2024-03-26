@@ -20,6 +20,7 @@ AFPSCharacter::AFPSCharacter()
 	//----------------------------------------------------------------------------
 	//First Person(Owner See)
 	//----------------------------------------------------------------------------
+	// -> Character Mesh
 	FP_Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	FP_Mesh->SetOnlyOwnerSee(true);
 	FP_Mesh->SetupAttachment(Camera);
@@ -36,6 +37,7 @@ AFPSCharacter::AFPSCharacter()
 	if (fp_AnimClass.Succeeded())
 		FP_Mesh->SetAnimInstanceClass(fp_AnimClass.Class);
 
+	//-> Gun Mesh
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
 	FP_Gun->SetOnlyOwnerSee(true);
 	FP_Gun->bCastDynamicShadow = false;
@@ -45,6 +47,7 @@ AFPSCharacter::AFPSCharacter()
 	//----------------------------------------------------------------------------
 	//Third Person(Other See)
 	//----------------------------------------------------------------------------
+	// -> Character Mesh
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -88));
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 	GetMesh()->SetOwnerNoSee(true);
@@ -57,12 +60,14 @@ AFPSCharacter::AFPSCharacter()
 	if (tp_AnimClass.Succeeded())
 		GetMesh()->SetAnimInstanceClass(tp_AnimClass.Class);
 
+	//Gun Mesh
 	TP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("TP_Gun"));
 	TP_Gun->SetOwnerNoSee(true);
 	TP_Gun->SetupAttachment(GetMesh(), "hand_r");
 	TP_Gun->SetRelativeLocation(FVector(-9.8f, 5, 0));
 	TP_Gun->SetRelativeRotation(FRotator(0, 90, 0));
 
+	//Gun Asset
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> gunAsset(TEXT("/Game/FirstPerson/FPWeapon/Mesh/SK_FPGun"));
 	if (gunAsset.Succeeded())
 	{
@@ -150,7 +155,7 @@ void AFPSCharacter::OnFire()
 
 	if ((DamagedActor != NULL) && (DamagedActor != this) && (DamagedComponent != NULL) && DamagedComponent->IsSimulatingPhysics())
 	{
-		DamagedComponent->AddImpulseAtLocation(ShootDir * WeaponDamage, Impact.Location);
+		DamagedComponent->AddImpulseAtLocation(ShootDir * WeaponDamage * 5000, Impact.Location);
 	}
 
 	
