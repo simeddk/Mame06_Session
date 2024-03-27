@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Game/CGameState.h"
 #include "FPSCharacter.generated.h"
 
 class UInputComponent;
@@ -74,6 +75,11 @@ protected:
 		void NetMulticast_ShootEffects();
 	void NetMulticast_ShootEffects_Implementation();
 
+public:
+	UFUNCTION(NetMulticast, Reliable)
+		void SetTeamColor(ETeamType InTeamType);
+	void SetTeamColor_Implementation(ETeamType InTeamType);
+
 protected:
 	void MoveForward(float Val);
 	void MoveRight(float Val);
@@ -85,5 +91,11 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
+public:
+	UPROPERTY(Replicated)
+		ETeamType CurrentTeam;
+
+private:
+	class UMaterialInstanceDynamic* DynamicMaterial;
 };
 
