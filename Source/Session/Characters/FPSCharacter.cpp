@@ -10,6 +10,8 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Actors/CBullet.h"
+#include "Game/CPlayerState.h"
+#include "Engine/TargetPoint.h"
 
 AFPSCharacter::AFPSCharacter()
 {
@@ -131,7 +133,19 @@ void AFPSCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	if (HasAuthority() == false)
+	{
 		SetTeamColor(CurrentTeam);
+	}
+}
+
+void AFPSCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	SelfPlayerState = Cast<ACPlayerState>(GetPlayerState());
+
+	if (!!SelfPlayerState)
+		SelfPlayerState->Health = 100.f;
 }
 
 void AFPSCharacter::OnFire()
