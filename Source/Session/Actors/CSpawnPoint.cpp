@@ -31,7 +31,7 @@ void ACSpawnPoint::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//Capsule->UpdateOverlaps();
+	Capsule->UpdateOverlaps();
 }
 
 void ACSpawnPoint::ActorBeginOverlap(AActor* OverlapActor, AActor* OtherActor)
